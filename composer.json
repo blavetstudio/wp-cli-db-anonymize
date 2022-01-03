@@ -1,0 +1,54 @@
+{
+    "name": "blavetstudio/wp-cli-db-anonymize",
+    "type": "wp-cli-package",
+    "description": "",
+    "homepage": "https://github.com/blavetstudio/wp-cli-db-anonymize",
+    "license": "MIT",
+    "authors": [],
+    "require": {
+        "wp-cli/wp-cli": "^2.5"
+    },
+    "require-dev": {
+        "wp-cli/wp-cli-tests": "^3.0.11"
+    },
+    "config": {
+        "process-timeout": 7200,
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "2.x-dev"
+        },
+        "bundled": false,
+        "commands": [
+            "db-anonymize"
+        ]
+    },
+    "autoload": {
+        "psr-4": {
+            "WP_CLI\\DBAnonymize\\": "src/"
+        },
+        "files": [
+            "db-anonymize-command.php"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "behat": "run-behat-tests",
+        "behat-rerun": "rerun-behat-tests",
+        "lint": "run-linter-tests",
+        "phpcs": "run-phpcs-tests",
+        "phpunit": "run-php-unit-tests",
+        "prepare-tests": "install-package-tests",
+        "test": [
+            "@lint",
+            "@phpcs",
+            "@phpunit",
+            "@behat"
+        ]
+    },
+    "support": {
+        "issues": "https://github.com/blavetstudio/wp-cli-db-anonymize/issues"
+    }
+}
