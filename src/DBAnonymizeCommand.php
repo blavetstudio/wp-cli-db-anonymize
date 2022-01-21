@@ -11,8 +11,6 @@ class DBAnonymizeCommand extends WP_CLI_Command {
 	public $user_meta = '';
 	public $anonymize_woocommerce = false;
 	public $confirm = true;
-
-	// TODO: Whitelist users
 	public $user_whitelist = '';
 
 	/**
@@ -37,6 +35,11 @@ class DBAnonymizeCommand extends WP_CLI_Command {
 	 * default: ''
 	 *
 	 *
+	 * [--user-whitelist]
+	 * : User whitelist. Comma separated user ids that we don't want to be anonymized
+	 * default: ''
+	 *
+	 *
 	 * @when after_wp_load
 	 *
 	 * @param array $args       Indexed array of positional arguments.
@@ -48,8 +51,6 @@ class DBAnonymizeCommand extends WP_CLI_Command {
 		$this->confirm        					= \WP_CLI\Utils\get_flag_value( $assoc_args, 'confirm', true );
 		$this->anonymize_woocommerce      = \WP_CLI\Utils\get_flag_value( $assoc_args, 'woocommerce', false );
 		$this->user_meta       						= \WP_CLI\Utils\get_flag_value( $assoc_args, 'user-meta', '' );
-
-		// TODO: Whitelist users
 		$this->user_whitelist       						= \WP_CLI\Utils\get_flag_value( $assoc_args, 'user-whitelist', '' );
 
 		wp_debug_mode();    // re-set `display_errors` after WP-CLI overrides it, see https://github.com/wp-cli/wp-cli/issues/706#issuecomment-203610437
@@ -110,21 +111,36 @@ class DBAnonymizeCommand extends WP_CLI_Command {
 		}
 
 		// Anonymize user_login, user_nicename, display_name
-		// TODO: Whitelist users, don't hardcode user 1
-		$update_query = "UPDATE {$this->db_prefix}users SET user_login = 'xxxxxxxx', user_nicename = 'xxxxxxxx', display_name = 'xxxxxxxx' WHERE ID NOT IN (1);";
+		$update_query = "UPDATE {$this->db_prefix}users SET user_login = 'xxxxxxxx', user_nicename = 'xxxxxxxx', display_name = 'xxxxxxxx';";
+
+		if( !empty($this->user_whitelist) ){
+			 $update_query = substr($update_query, 0, -1);
+			 $update_query .= " WHERE ID NOT IN ({$this->user_whitelist});";
+		}
+
 		if ( $wpdb->query( $update_query ) === false ) {
 			throw new \Exception( 'MySQL error: ' . $wpdb->last_error );
 		}
 
 		// First Name, Last Name
 		$update_query = "UPDATE {$this->db_prefix}usermeta SET meta_value = 'xxxxxxxx' WHERE meta_key IN ('nickname', 'first_name', 'last_name');";
+
+		if( !empty($this->user_whitelist) ){
+			 $update_query = substr($update_query, 0, -1);
+			 $update_query .= " AND user_id NOT IN ({$this->user_whitelist});";
+		}
+
 		if ( $wpdb->query( $update_query ) === false ) {
 			throw new \Exception( 'MySQL error: ' . $wpdb->last_error );
 		}
 
 		// Anonymize Emails
-		//$update_query = "UPDATE {$this->db_prefix}users SET user_email = concat(substring_index(user_email, '@', 1), FLOOR(rand() * 90000 + 10000), '@localhost.dev');";
-		$update_query = "UPDATE {$this->db_prefix}users SET user_email = concat(FLOOR(rand() * 90000 + 10000), '@localhost.dev') WHERE ID NOT IN (1);";
+		$update_query = "UPDATE {$this->db_prefix}users SET user_email = concat(FLOOR(rand() * 90000 + 10000), '@localhost.dev');";
+		if( !empty($this->user_whitelist) ){
+			 $update_query = substr($update_query, 0, -1);
+			 $update_query .= " WHERE ID NOT IN ({$this->user_whitelist});";
+		}
+
 		if ( $wpdb->query( $update_query ) === false ) {
 			throw new \Exception( 'MySQL error: ' . $wpdb->last_error );
 		}
@@ -146,12 +162,22 @@ class DBAnonymizeCommand extends WP_CLI_Command {
 		// Users addresses
 		// Billing
 		$update_query = "UPDATE {$this->db_prefix}usermeta SET meta_value = 'xxxxxxxx' WHERE meta_key LIKE 'billing_%';";
+		if( !empty($this->user_whitelist) ){
+			 $update_query = substr($update_query, 0, -1);
+			 $update_query .= " AND user_id NOT IN ({$this->user_whitelist})";
+		}
+
 		if ( $wpdb->query( $update_query ) === false ) {
 			throw new \Exception( 'MySQL error: ' . $wpdb->last_error );
 		}
 
 		// Shipping
 		$update_query = "UPDATE {$this->db_prefix}usermeta SET meta_value = 'xxxxxxxx' WHERE meta_key LIKE 'shipping_%';";
+		if( !empty($this->user_whitelist) ){
+			 $update_query = substr($update_query, 0, -1);
+			 $update_query .= " AND user_id NOT IN ({$this->user_whitelist})";
+		}
+
 		if ( $wpdb->query( $update_query ) === false ) {
 			throw new \Exception( 'MySQL error: ' . $wpdb->last_error );
 		}
@@ -173,7 +199,7 @@ class DBAnonymizeCommand extends WP_CLI_Command {
 
 
 	/**
-	 * Anonymize custom data
+	 * Anonymize custom metas
 	 *
 	 * @throws Exception
 	 */
@@ -187,6 +213,11 @@ class DBAnonymizeCommand extends WP_CLI_Command {
 		$metas = explode(',', $this->user_meta);
 		foreach ($metas as $key => $value) {
 			$update_query = "UPDATE {$this->db_prefix}usermeta SET meta_value = 'xxxxxxxx' WHERE meta_key LIKE '{$value}%';";
+			if( !empty($this->user_whitelist) ){
+			 $update_query = substr($update_query, 0, -1);
+			 $update_query .= " AND user_id NOT IN ({$this->user_whitelist})";
+		}
+
 			if ( $wpdb->query( $update_query ) === false ) {
 				throw new \Exception( 'MySQL error: ' . $wpdb->last_error );
 			}
