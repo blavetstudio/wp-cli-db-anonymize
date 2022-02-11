@@ -7,11 +7,51 @@ blavetstudio/wp-cli-db-anonymize
 
 Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contributing) | [Support](#support)
 
+```$ wp db-anonymize --help```
 ## Using
 
-~~~
-wp db-anonymize
-~~~
+```$ wp db-anonymize```
+
+Anonymizes WordPress **users** table:
+- user_login
+- user_nicename
+- display_name
+- user_email
+
+And **usermeta** table:
+- nickname
+- first_name
+- last_name
+---
+
+```$ wp db-anonymize --woocommerce```
+
+Anonymizes WordPress and WooCommerce **usermeta** table fields:
+- billing_*
+- shipping_*
+
+...and **postmeta** table fields related to orders:
+- \_billing\_*
+- \_shipping\_*
+---
+
+```$ wp db-anonymize --user-meta=blavet_```
+
+Anonymizes WordPress and all **usermeta** rows containing the string 'blavet_'.
+You can also pass a comma separated list to have multiple metas anonymized
+
+---
+
+```$ wp db-anonymize --user-whitelist=1```
+
+Anonymizes all WordPress users but doesn't anonymize user with id 1
+
+---
+
+```$ wp db-anonymize --no-confirm```
+
+Anonymizes all WordPress users without confirmation prompt
+
 
 ## Installing
 
